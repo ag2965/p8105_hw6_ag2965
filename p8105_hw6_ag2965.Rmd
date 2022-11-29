@@ -126,12 +126,23 @@ balt_fit%>%
     select(term,estimate,p.value)%>%
     knitr::kable(digits=2)
 ```
+```{r}
+balt_fit%>%
+  dplyr::select(starts_with("rmse"))%>%
+  pivot_longer(
+    everything(),
+    names_to="model",
+    values_to"rmse",
+    names_prefix="rmse_")%>%
+  mutate(model=fct_inorder(model))%>%
+  ggplot(aes(x=model,y=rmse))+geom_violin()
+```
 
 Now run glm for each of the cities in your dataset, and extract the adjusted odds ratio (and CI) for solving homicides comparing male victims to female victims. Do this within a “tidy” pipeline, making use of purrr::map, list columns, and unnest as necessary to create a dataframe with estimated ORs and CIs for each city.
 
 ```{r}
 homicides_clean %>% 
-  lm(solved~victim_age + victim_sex + victim_race, data = .) %>% 
+  glm(solved~victim_age + victim_sex + victim_race, data = .) %>%
   broom::tidy() %>% 
   knitr::kable(digits = 3)
 
@@ -139,10 +150,10 @@ homicide_fit =
   homicides_clean %>% 
   nest(data = -city_state) %>% 
   mutate(
-    models = map(data, ~lm(solved~victim_age + victim_sex + victim_race, data = .x)),
-    results = map(models, broom::tidy)) %>% 
-  select(-data, -models) %>% 
-  unnest(results)
+    models = map(data, ~glm(solved~victim_age + victim_sex + victim_race, data = .x, family=binomial)),
+    results = map(models, broom::tidy(conf.int=TRUE))) %>% 
+  select(city_state, models) %>% 
+  unnest(cols=models)
 ```
 
 
