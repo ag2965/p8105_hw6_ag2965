@@ -238,9 +238,9 @@ summary(bwt_fit)
 ```
 
 
-
 One using head circumference, length, sex, and all interactions (including the three-way interaction) between these
 Make this comparison in terms of the cross-validated prediction error; use crossv_mc and functions in purrr as appropriate.
+
 
 ```{r}
 bwt_fit2 = birthweight_df %>% lm (bwt~ bhead + blength + babysex + bhead*blength + bhead*babysex + blength*babysex + bhead*blength*babysex, data=.)
@@ -250,7 +250,3 @@ bwt_fit%>%
 
 summary(bwt_fit)
 ```
-
-
-Note that although we expect your model to be reasonable, model building itself is not a main idea of the course and we don’t necessarily expect your model to be “optimal”.
-
