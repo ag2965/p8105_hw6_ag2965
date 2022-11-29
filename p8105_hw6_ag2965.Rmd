@@ -147,7 +147,7 @@ homicides_fit =
   nest(data = -city_state) %>% 
   mutate(
     models = map(.x=data, ~glm(solved~victim_age + victim_sex + victim_race, data = .x, family=binomial())),
-    results = map(models, broom::tidy())) %>% 
+    results = map(models, broom::tidy)) %>% 
   unnest(results)%>%
   filter(term == "victim_sexMale") %>%
     mutate(OR = exp(estimate),
@@ -155,6 +155,7 @@ homicides_fit =
          OR_conf_high = exp(estimate + 1.96*(std.error))) %>%
   select(city_state, OR, OR_conf_low, OR_conf_high) 
 
+homicides_fit
 ```
 
 
