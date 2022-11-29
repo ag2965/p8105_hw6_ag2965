@@ -11,6 +11,7 @@ editor_options:
 library(tidyverse)
 library(p8105.datasets)
 library(viridis)
+library(ggplot2)
 
 knitr::opts_chunk$set(
 	echo = TRUE,
@@ -160,6 +161,20 @@ homicides_fit
 
 
 Create a plot that shows the estimated ORs and CIs for each city. Organize cities according to estimated OR, and comment on the plot.
+
+
+```{r}
+homicides_ordered=homicides_fit%>%
+  mutate(
+    city_state=fct_reorder(city_state,OR))
+ggplot(homicides_ordered, aes(x=city_state, y=OR)) + 
+    geom_errorbar(aes(ymin=OR_conf_low, ymax=OR_conf_high), width=.1) +
+    geom_line() +
+    geom_point()
+
+
+
+```
 
 ```{r}
 balt_fit%>%
