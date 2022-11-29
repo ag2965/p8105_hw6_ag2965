@@ -95,7 +95,7 @@ homicides_clean=homicides_df%>%
   janitor::clean_names()%>%
     unite(city_state, c(city, state), sep = ", ")%>%
     filter(victim_race=="White" | victim_race=="Black")%>%
-    subset(city_state!="Dallas, TX" |city_state!= "Phoenix, AZ"|city_state!= "Kansas City, MO"| city_state!= "Tulsa, OK"| city_state!= "Tulsa, AL")%>%
+    subset(city_state!='Dallas, TX'& city_state!='Phoenix, AZ' & city_state!= 'Kansas City, MO' & city_state!= 'Tulsa, OK' & city_state!= 'Tulsa, AL')%>%
   mutate(
     solved = case_when(disposition=="Closed by arrest" ~ '1',
                            disposition=="Closed without arrest" |                              disposition=="Open/No arrest" ~ '0'),
