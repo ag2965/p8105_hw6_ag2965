@@ -85,21 +85,10 @@ Let's load the data.
 ```{r}
 homicides_df <- read.csv(url("https://raw.githubusercontent.com/washingtonpost/data-homicides/master/homicide-data.csv"))%>%
   janitor::clean_names()
+```
 
-homicides_df_total=homicides_df%>%
-  janitor::clean_names()%>%
-  count()
-
-homicides_df_state=homicides_df%>%
-  janitor::clean_names()%>%
-  group_by(state)%>%
-  summarize
-
-homicides_df_city=homicides_df%>%
-  janitor::clean_names()%>%
-  group_by(city)%>%
-  summarize
-
+Next, I have created a city_state variable and a binary variable indicating whether the homicide is solved. I have omitted cities don’t report victim race and data entry mistakes. I have limtied the analysis those for whom victim_race is white or black and ensured that victim_age is numeric.
+```{r}
 unsolved_homicides=homicides_df%>%
   janitor::clean_names()%>%
     unite(city_state, c(city, state), sep = ", ")%>%
@@ -117,7 +106,7 @@ unsolved_homicides=homicides_df%>%
 unsolved_homicides%>%
   knitr::kable()
 ```
-Create a city_state variable (e.g. “Baltimore, MD”), and a binary variable indicating whether the homicide is solved. Omit cities Dallas, TX; Phoenix, AZ; and Kansas City, MO – these don’t report victim race. Also omit Tulsa, AL – this is a data entry mistake. For this problem, limit your analysis those for whom victim_race is white or black. Be sure that victim_age is numeric.
+
 
 For the city of Baltimore, MD, use the glm function to fit a logistic regression with resolved vs unresolved as the outcome and victim age, sex and race as predictors. Save the output of glm as an R object; apply the broom::tidy to this object; and obtain the estimate and confidence interval of the adjusted odds ratio for solving homicides comparing male victims to female victims keeping all other variables fixed.
 
