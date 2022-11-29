@@ -99,10 +99,14 @@ homicides_clean=homicides_df%>%
   mutate(
     solved = case_when(disposition=="Closed by arrest" ~ '1',
                            disposition=="Closed without arrest" |                              disposition=="Open/No arrest" ~ '0'),
-    victim_age=as.numeric(victim_age))
+    victim_age=as.numeric(victim_age),
+    solved=as.numeric(solved),
+    )
 
 ```
-For the city of Baltimore, MD, use the glm function to fit a logistic regression with resolved vs unresolved as the outcome and victim age, sex and race as predictors. Save the output of glm as an R object; apply the broom::tidy to this object; and obtain the estimate and confidence interval of the adjusted odds ratio for solving homicides comparing male victims to female victims keeping all other variables fixed.
+For the city of Baltimore, MD, we have used the glm function to fit a logistic regression with resolved vs unresolved as the outcome and victim age, sex and race as predictors. Save the output of glm as an R object; apply the broom::tidy to this object; and 
+
+Need to do this: obtain the estimate and confidence interval of the adjusted odds ratio for solving homicides comparing male victims to female victims keeping all other variables fixed.
 
 ```{r}
 baltimore_homicides=homicides_clean%>%
@@ -110,7 +114,7 @@ baltimore_homicides=homicides_clean%>%
 ```
 
 ```{r}
-balt_fit = lm(solved~victim_age + victim_sex + victim_race, data=baltimore_homicides)
+balt_fit = glm(solved~victim_age + victim_sex + victim_race, data=baltimore_homicides)
 
 balt_fit%>% 
   broom::glance()
@@ -121,11 +125,26 @@ balt_fit%>%
   broom::tidy()%>%
     select(term,estimate,p.value)%>%
     knitr::kable(digits=2)
-  
-  #for each one unit increase in stars the price goes up (estimate)
 ```
 
 Now run glm for each of the cities in your dataset, and extract the adjusted odds ratio (and CI) for solving homicides comparing male victims to female victims. Do this within a “tidy” pipeline, making use of purrr::map, list columns, and unnest as necessary to create a dataframe with estimated ORs and CIs for each city.
+
+```{r}
+homicides_clean %>% 
+  lm(solved~victim_age + victim_sex + victim_race, data = .) %>% 
+  broom::tidy() %>% 
+  knitr::kable(digits = 3)
+
+homicide_fit =
+  homicides_clean %>% 
+  nest(data = -city_state) %>% 
+  mutate(
+    models = map(data, ~lm(solved~victim_age + victim_sex + victim_race, data = .x)),
+    results = map(models, broom::tidy)) %>% 
+  select(-data, -models) %>% 
+  unnest(results)
+```
+
 
 
 
