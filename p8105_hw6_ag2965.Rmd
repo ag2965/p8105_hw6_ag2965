@@ -105,9 +105,7 @@ homicides_clean=homicides_df%>%
     )
 
 ```
-For the city of Baltimore, MD, we have used the glm function to fit a logistic regression with resolved vs unresolved as the outcome and victim age, sex and race as predictors. Save the output of glm as an R object; apply the broom::tidy to this object; and 
-
-Need to do this: obtain the estimate and confidence interval of the adjusted odds ratio for solving homicides comparing male victims to female victims keeping all other variables fixed.
+For the city of Baltimore, MD, we have used the glm function to fit a logistic regression with resolved vs unresolved as the outcome and victim age, sex and race as predictors. We have obtained an estimate and confidence interval of the adjusted odds ratio for solving homicides comparing male victims to female victims keeping all other variables fixed.
 
 ```{r}
 baltimore_homicides=homicides_clean%>%
@@ -130,7 +128,7 @@ balt_fit%>%
     select(term,log_OR=estimate,OR, OR_conf_low, OR_conf_high)
 ```
 
-Now run glm for each of the cities in your dataset, and extract the adjusted odds ratio (and CI) for solving homicides comparing male victims to female victims. Do this within a “tidy” pipeline, making use of purrr::map, list columns, and unnest as necessary to create a dataframe with estimated ORs and CIs for each city.
+We then ran a glm for each of the cities in the dataset and extracted the adjusted odds ratio (and CI) for solving homicides comparing male victims to female victims.
 
 ```{r}
 homicides_clean %>% 
@@ -160,7 +158,7 @@ homicides_fit
 ```
 
 
-Create a plot that shows the estimated ORs and CIs for each city. Organize cities according to estimated OR, and comment on the plot.
+Below, we have created a plot that shows the estimated ORs and CIs for each city.
 
 
 ```{r}
@@ -170,7 +168,11 @@ homicides_ordered=homicides_fit%>%
 ggplot(homicides_ordered, aes(x=city_state, y=OR)) + 
     geom_errorbar(aes(ymin=OR_conf_low, ymax=OR_conf_high), width=.1) +
     geom_line() +
-    geom_point()
+    geom_point()+
+    labs(title = "Odds of solving homicides of male vs. female victims",
+           x = "City and State",
+       y="Adjusted OR") +
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 
 
 
