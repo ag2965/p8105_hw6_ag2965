@@ -172,10 +172,8 @@ ggplot(homicides_ordered, aes(x=city_state, y=OR)) +
     labs(title = "Odds of solving homicides of male vs. female victims",
            x = "City and State",
        y="Adjusted OR") +
+    theme(plot.title = element_text(hjust = 0.5))+
     theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
-
-
-
 ```
 
 ```{r}
@@ -225,11 +223,34 @@ Load and clean the data for regression analysis (i.e. convert numeric to factor 
 
 Propose a regression model for birthweight. This model may be based on a hypothesized structure for the factors that underly birthweight, on a data-driven model-building process, or a combination of the two. Describe your modeling process and show a plot of model residuals against fitted values – use add_predictions and add_residuals in making this plot.
 
+
 Compare your model to two others:
 
 One using length at birth and gestational age as predictors (main effects only)
+
+```{r}
+bwt_fit = birthweight_df %>% lm (bwt~blength+gaweeks, data=.)
+
+bwt_fit%>% 
+  broom::glance()
+
+summary(bwt_fit)
+```
+
+
+
 One using head circumference, length, sex, and all interactions (including the three-way interaction) between these
 Make this comparison in terms of the cross-validated prediction error; use crossv_mc and functions in purrr as appropriate.
+
+```{r}
+bwt_fit2 = birthweight_df %>% lm (bwt~ bhead + blength + babysex + bhead*blength + bhead*babysex + blength*babysex + bhead*blength*babysex, data=.)
+
+bwt_fit%>% 
+  broom::glance()
+
+summary(bwt_fit)
+```
+
 
 Note that although we expect your model to be reasonable, model building itself is not a main idea of the course and we don’t necessarily expect your model to be “optimal”.
 
