@@ -95,7 +95,7 @@ homicides_clean=homicides_df%>%
   janitor::clean_names()%>%
     unite(city_state, c(city, state), sep = ", ")%>%
     filter(victim_race=="White" | victim_race=="Black")%>%
-    filter(city_state !='Dallas, TX' |city_state != 'Phoenix, AZ'|city_state != 'Kansas City, MO'| city_state != 'Tulsa, OK')%>%
+    subset(city_state!="Dallas, TX" |city_state!= "Phoenix, AZ"|city_state!= "Kansas City, MO"| city_state!= "Tulsa, OK"| city_state!= "Tulsa, AL")%>%
   mutate(
     solved = case_when(disposition=="Closed by arrest" ~ '1',
                            disposition=="Closed without arrest" |                              disposition=="Open/No arrest" ~ '0'),
@@ -114,7 +114,7 @@ baltimore_homicides=homicides_clean%>%
 ```
 
 ```{r}
-balt_fit = glm(solved~victim_age + victim_sex + victim_race, data=baltimore_homicides)
+balt_fit = baltimore_homicides %>% glm(solved~victim_age + victim_sex + victim_race, data=., family=binomial())
 
 balt_fit%>% 
   broom::glance()
@@ -123,9 +123,43 @@ summary(balt_fit)
 
 balt_fit%>%
   broom::tidy()%>%
-    select(term,estimate,p.value)%>%
-    knitr::kable(digits=2)
+  mutate(OR=exp(estimate),
+         OR_conf_low=exp(OR-1.96*(std.error)),
+         OR_conf_high=exp(OR+1.96*(std.error)))%>%
+    select(term,log_OR=estimate,OR, OR_conf_low, OR_conf_high)
 ```
+
+Now run glm for each of the cities in your dataset, and extract the adjusted odds ratio (and CI) for solving homicides comparing male victims to female victims. Do this within a “tidy” pipeline, making use of purrr::map, list columns, and unnest as necessary to create a dataframe with estimated ORs and CIs for each city.
+
+```{r}
+homicides_clean %>% 
+  glm(solved~victim_age + victim_sex + victim_race, data = .) %>%
+  broom::tidy() %>% 
+  knitr::kable(digits = 3)
+
+homicides_clean%>%
+  group_by(city_state)%>%
+    summarize(
+      total=n())
+
+homicides_fit =
+  homicides_clean %>% 
+  nest(data = -city_state) %>% 
+  mutate(
+    models = map(.x=data, ~glm(solved~victim_age + victim_sex + victim_race, data = .x, family=binomial())),
+    results = map(models, broom::tidy())) %>% 
+  unnest(results)%>%
+  filter(term == "victim_sexMale") %>%
+    mutate(OR = exp(estimate),
+           OR_conf_low = exp(estimate - 1.96*(std.error)),
+         OR_conf_high = exp(estimate + 1.96*(std.error))) %>%
+  select(city_state, OR, OR_conf_low, OR_conf_high) 
+
+```
+
+
+Create a plot that shows the estimated ORs and CIs for each city. Organize cities according to estimated OR, and comment on the plot.
+
 ```{r}
 balt_fit%>%
   dplyr::select(starts_with("rmse"))%>%
@@ -137,29 +171,6 @@ balt_fit%>%
   mutate(model=fct_inorder(model))%>%
   ggplot(aes(x=model,y=rmse))+geom_violin()
 ```
-
-Now run glm for each of the cities in your dataset, and extract the adjusted odds ratio (and CI) for solving homicides comparing male victims to female victims. Do this within a “tidy” pipeline, making use of purrr::map, list columns, and unnest as necessary to create a dataframe with estimated ORs and CIs for each city.
-
-```{r}
-homicides_clean %>% 
-  glm(solved~victim_age + victim_sex + victim_race, data = .) %>%
-  broom::tidy() %>% 
-  knitr::kable(digits = 3)
-
-homicide_fit =
-  homicides_clean %>% 
-  nest(data = -city_state) %>% 
-  mutate(
-    models = map(data, ~glm(solved~victim_age + victim_sex + victim_race, data = .x, family=binomial)),
-    results = map(models, broom::tidy(conf.int=TRUE))) %>% 
-  select(city_state, models) %>% 
-  unnest(cols=models)
-```
-
-
-Create a plot that shows the estimated ORs and CIs for each city. Organize cities according to estimated OR, and comment on the plot.
-
-
 
 
 Problem 3
