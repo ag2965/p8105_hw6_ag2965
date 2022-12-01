@@ -63,7 +63,7 @@ r̂ 2
 log(β̂ 0∗β̂ 1)
 Use 5000 bootstrap samples and, for each bootstrap sample, produce estimates of these two quantities. Plot the distribution of your estimates, and describe these in words. Using the 5000 bootstrap estimates, identify the 2.5% and 97.5% quantiles to provide a 95% confidence interval for r̂ 2 and log(β̂ 0∗β̂ 1). Note: broom::glance() is helpful for extracting r̂ 2 from a fitted regression, and broom::tidy() (with some additional wrangling) should help in computing log(β̂ 0∗β̂ 1).
 
-```{r}
+```{r, eval=FALSE}
 weatherboot_df = 
   tibble(
     x = tmin,
@@ -84,7 +84,7 @@ boot_straps
 ```
 
 Problem 2
-The Washington Post has gathered data on homicides in 50 large U.S. cities and made the data available through a GitHub repository here. You can read their accompanying article here.
+The Washington Post has gathered data on homicides in 50 large U.S. cities and made the data available through a GitHub repository here. We will perform logistic regression analysis on this dataset.
 
 Let's load the data. 
 ```{r}
@@ -160,7 +160,7 @@ homicides_fit
 ```
 
 
-Below, we have created a plot that shows the estimated ORs and CIs for each city.
+Below, we have created a plot that shows the estimated ORs and CIs for each city. The odds of solving homicides of male victims was lower than the odds of solving homicides of female victims in all studied cities except for in Fresno CA, Stockton, CA, and Albuquerque, NM.
 
 
 ```{r}
@@ -180,7 +180,7 @@ ggplot(homicides_ordered, aes(x=city_state, y=OR)) +
 
 
 Problem 3
-In this problem, you will analyze data gathered to understand the effects of several variables on a child’s birthweight. This dataset, available here, consists of roughly 4000 children and includes the following variables:
+In this problem, we analyzed data gathered to understand the effects of several variables on a child’s birthweight.
 
 First, let's load the data.
 
@@ -192,7 +192,7 @@ birthweight_df<- read.csv("data/birthweight.csv")%>%
   )
 ```
 
-Propose a regression model for birthweight. This model may be based on a hypothesized structure for the factors that underly birthweight, on a data-driven model-building process, or a combination of the two. Describe your modeling process and show a plot of model residuals against fitted values – use add_predictions and add_residuals in making this plot.
+Below, I have proposed a regression model for birthweight. This model included  head circumference, length, and gestational age in weeks as predictors of birthweight. I first created this model and made a plot of model residuals against fitted values using add_predictions and add_residuals. The plot demonstrates clustering from 2000g to 4000g, with a few outlying points in the very low birthweight range, suggesting that this model may not be as valid for very low birthweight babies. Of note, there are 3 negative birthweight values, which appear to be errors in documentation.
 
 
 ```{r}
