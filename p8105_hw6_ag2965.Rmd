@@ -34,12 +34,9 @@ scale_fill_discrete = scale_fill_viridis_d
 theme_set(theme_minimal() + theme(legend.position = "bottom"))
 ```
 
-Your solutions to Problems 1 and 2 should be implemented in your .Rmd file, and your git commit history should reflect the process you used to solve these Problems.
 
-This homework includes figures; the readability of your embedded plots (e.g. font sizes, axis labels, titles) will be assessed in Problems 1+.
-
-Problem 1
-For this problem, we’ll use the 2017 Central Park weather data that we’ve seen elsewhere. The code chunk below (adapted from the course website) will download these data.
+#Problem 1
+We used the the 2017 Central Park weather data for this problem. First, we'll load the data.
 
 
 ```{r}
@@ -83,7 +80,8 @@ boot_straps
 
 ```
 
-Problem 2
+
+#Problem 2
 The Washington Post has gathered data on homicides in 50 large U.S. cities and made the data available through a GitHub repository here. We will perform logistic regression analysis on this dataset.
 
 Let's load the data. 
@@ -179,7 +177,8 @@ ggplot(homicides_ordered, aes(x=city_state, y=OR)) +
 ```
 
 
-Problem 3
+
+#Problem 3
 In this problem, we analyzed data gathered to understand the effects of several variables on a child’s birthweight.
 
 First, let's load the data.
@@ -192,7 +191,7 @@ birthweight_df<- read.csv("data/birthweight.csv")%>%
   )
 ```
 
-Below, I have proposed a regression model for birthweight. This model included  head circumference, length, and gestational age in weeks as predictors of birthweight. I first created this model and made a plot of model residuals against fitted values using add_predictions and add_residuals. The plot demonstrates clustering from 2000g to 4000g, with a few outlying points in the very low birthweight range, suggesting that this model may not be as valid for very low birthweight babies. Of note, there are 3 negative birthweight values, which appear to be errors in documentation.
+Below, I have proposed a regression model (Model 1) for birthweight. This model included  head circumference, length, and gestational age in weeks as predictors of birthweight. I first created this model and made a plot of model residuals against fitted values using add_predictions and add_residuals. The scatterplot demonstrates clustering from 2000g to 4000g, with a few outlying points in the very low birthweight range, suggesting that this model may not be as valid for very low birthweight babies. Of note, there are 3 negative birthweight values, which appear to be errors in documentation.
 
 
 ```{r}
@@ -210,9 +209,7 @@ birthweight_df %>%
 
 ```
 
-Compare your model to two others:
-
-One using length at birth and gestational age as predictors (main effects only)
+I have now compared this model to two others. Model 2 uses length at birth and gestational age as predictors, without including interaction effects. The scatterplot demonstrates clustering from 2000g to 4000g.  This plot also has a a few outlying points in the very low birthweight range, suggesting that this model may not be as valid for very low birthweight babies. Of note, there is 1 negative birthweight value, which appears to be an error in documentation.
 
 ```{r}
 bwt_fit2 = birthweight_df %>% lm (bwt~blength+gaweeks, data=.)
@@ -221,11 +218,15 @@ bwt_fit2%>%
   broom::glance()
 
 summary(bwt_fit2)
+
+birthweight_df  %>% 
+  modelr::add_residuals(bwt_fit2) %>% 
+  modelr::add_predictions(bwt_fit2) %>% 
+  ggplot(aes(x = pred, y = resid)) + geom_point()
 ```
 
 
-One using head circumference, length, sex, and all interactions (including the three-way interaction) between these
-Make this comparison in terms of the cross-validated prediction error; use crossv_mc and functions in purrr as appropriate.
+The other model (Model 3) uses head circumference, length, sex, and all interactions (including the three-way interaction) between these variables. The associated scatterplot shows findings as the other models. 
 
 ```{r}
 bwt_fit3 = birthweight_df %>% lm (bwt~ bhead + blength + babysex + bhead*blength + bhead*babysex + blength*babysex + bhead*blength*babysex, data=.)
@@ -234,8 +235,15 @@ bwt_fit3%>%
   broom::glance()
 
 summary(bwt_fit3)
+
+birthweight_df  %>% 
+  modelr::add_residuals(bwt_fit3) %>% 
+  modelr::add_predictions(bwt_fit3) %>% 
+  ggplot(aes(x = pred, y = resid)) + geom_point()
 ```
 
+
+Next, we compare the three models using cross-validated prediction error as per below. We have created resulting violin plots, which show that the root mean standard error is highest with the second model, which includes only length at birth and gestational age in weeks. This suggests that this model is inferior to the others. This is unsurprising as models 1 and 3 contained more prediction variables as compared to model 2. 
 ```{r}
 cv_df =
   crossv_mc(birthweight_df, 100) %>% 
