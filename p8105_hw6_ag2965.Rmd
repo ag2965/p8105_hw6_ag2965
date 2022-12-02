@@ -36,6 +36,7 @@ theme_set(theme_minimal() + theme(legend.position = "bottom"))
 
 
 #Problem 1
+
 We used the the 2017 Central Park weather data for this problem. First, we'll load the data.
 
 
@@ -52,36 +53,46 @@ weather_df =
     tmax = tmax / 10) %>%
   select(name, id, everything())
 ```
+To obtain a distribution for r̂^2$, we'll follow basically the same procedure we used for regression coefficients: draw bootstrap samples; the a model to each; extract the value I'm concerned with; and summarize. Here, we'll use `modelr::bootstrap` to draw the samples and `broom::glance` to produce `r.squared` values. 
 
-
-The boostrap is helpful when you’d like to perform inference for a parameter / value / summary that doesn’t have an easy-to-write-down distribution in the usual repeated sampling framework. We’ll focus on a simple linear regression with tmax as the response and tmin as the predictor, and are interested in the distribution of two quantities estimated from these data:
-
-r̂ 2
-log(β̂ 0∗β̂ 1)
-Use 5000 bootstrap samples and, for each bootstrap sample, produce estimates of these two quantities. Plot the distribution of your estimates, and describe these in words. Using the 5000 bootstrap estimates, identify the 2.5% and 97.5% quantiles to provide a 95% confidence interval for r̂ 2 and log(β̂ 0∗β̂ 1). Note: broom::glance() is helpful for extracting r̂ 2 from a fitted regression, and broom::tidy() (with some additional wrangling) should help in computing log(β̂ 0∗β̂ 1).
-
-```{r, eval=FALSE}
-weatherboot_df = 
-  tibble(
-    x = tmin,
-    error = r̂ 2
-    log(β̂ 0∗β1), #what is the error term here
-    y = tmax
-  )
-
-
-boot_straps = 
-  data_frame(
-    strap_number = 1:5000,
-    strap_sample = rerun(5000, boot_sample(weatherboot_df))
-  )
-
-boot_straps
-
+```{r}
+weather_df %>% 
+  modelr::bootstrap(n = 1000) %>% 
+  mutate(
+    models = map(strap, ~lm(tmax ~ tmin, data = .x) ),
+    results = map(models, broom::glance)) %>% 
+  select(-strap, -models) %>% 
+  unnest(results) %>% 
+  ggplot(aes(x = r.squared)) + geom_density()
 ```
+
+In this example, the r̂^2 value is high, and the upper bound at 1 may be a cause for the generally skewed shape of the distribution. If we wanted to construct a confidence interval for r̂^2, we could take the 2.5% and 97.5% quantiles of the estimates across bootstrap samples. However, because the shape isn't symmetric, using the mean +/- 1.96 times the standard error probably wouldn't work well.
+
+We can produce a distribution for $\log(\beta_0 * \beta1)$ using a similar approach, with a bit more wrangling before we make our plot.
+
+```{r}
+weather_df %>% 
+  modelr::bootstrap(n = 1000) %>% 
+  mutate(
+    models = map(strap, ~lm(tmax ~ tmin, data = .x) ),
+    results = map(models, broom::tidy)) %>% 
+  select(-strap, -models) %>% 
+  unnest(results) %>% 
+  select(id = `.id`, term, estimate) %>% 
+  pivot_wider(
+    names_from = term, 
+    values_from = estimate) %>% 
+  rename(beta0 = `(Intercept)`, beta1 = tmin) %>% 
+  mutate(log_b0b1 = log(beta0 * beta1)) %>% 
+  ggplot(aes(x = log_b0b1)) + geom_density()
+```
+
+As with $r^2$, this distribution is somewhat skewed and has some outliers. 
+
 
 
 #Problem 2
+
 The Washington Post has gathered data on homicides in 50 large U.S. cities and made the data available through a GitHub repository here. We will perform logistic regression analysis on this dataset.
 
 Let's load the data. 
@@ -179,6 +190,7 @@ ggplot(homicides_ordered, aes(x=city_state, y=OR)) +
 
 
 #Problem 3
+
 In this problem, we analyzed data gathered to understand the effects of several variables on a child’s birthweight.
 
 First, let's load the data.
